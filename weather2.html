@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg,rgb(30, 107, 114),rgb(120, 230, 225));
+      color: white;
+      transition: background 1s ease-in-out;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    .weather-icon {
+      display: block;
+      margin: 0 auto;
+      width: 100px;
+      height: 100px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .weather-animation {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="weatherAnimation" class="weather-animation"></div>
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card p-4">
+          <h2 class="text-center mb-4">Weather App</h2>
+          <form id="weatherForm">
+            <div class="mb-3">
+              <input type="text" class="form-control" id="city" placeholder="Enter City Name" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100" style="background-color:rgb(30, 107, 114)" >Get Weather</button>
+          </form>
+          <div class="mt-4 text-center" id="weatherResult" style="display: none;">
+            <h4>Weather Details</h4>
+            <img id="weatherIcon" class="weather-icon" alt="Weather Icon">
+            <p><strong>City:</strong> <span id="resultCity"></span></p>
+            <p><strong>Temperature:</strong> <span id="resultTemp"></span> °C</p>
+            <p><strong>Description:</strong> <span id="resultDesc"></span></p>
+          </div>
+          <div class="alert alert-danger mt-3" id="errorAlert" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById('weatherForm');
+    const weatherResult = document.getElementById('weatherResult');
+    const errorAlert = document.getElementById('errorAlert');
+    const resultCity = document.getElementById('resultCity');
+    const resultTemp = document.getElementById('resultTemp');
+    const resultDesc = document.getElementById('resultDesc');
+    const weatherIcon = document.getElementById('weatherIcon');
+    const weatherAnimation = document.getElementById('weatherAnimation');
+    const apiKey = '588ff9d6915610bd749ad8e6bb311edb';
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      weatherResult.style.display = 'none';
+      errorAlert.style.display = 'none';
+      const city = document.getElementById('city').value.trim();
+      if (!city) {
+        errorAlert.textContent = 'City name cannot be empty!';
+        errorAlert.style.display = 'block';
+        return;
+      }
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('City not found. Please enter a valid city name.');
+        }
+        const data = await response.json();
+        resultCity.textContent = data.name;
+        resultTemp.textContent = data.main.temp;
+        resultDesc.textContent = data.weather[0].description;
+        weatherIcon.src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+        weatherResult.style.display = 'block';
+        updateWeatherAnimation(data.weather[0].main);
+      } catch (error) {
+        errorAlert.textContent = error.message;
+        errorAlert.style.display = 'block';
+      }
+    });
+
+    function updateWeatherAnimation(condition) {
+      let animationHTML = '';
+      switch (condition.toLowerCase()) {
+        case 'clear':
+          animationHTML = '<div style="position:absolute;width:100%;height:100%;background:radial-gradient(circle at top, transparent);"></div>';
+          break;
+        case 'clouds':
+          animationHTML = '<div style="position:absolute;width:100%;height:100%;background:url(https://www.transparenttextures.com/patterns/cloudy.png);"></div>';
+          break;
+        case 'rain':
+          animationHTML = '<div style="position:absolute;width:100%;height:100%;background:url(https://cdn.pixabay.com/photo/2013/04/01/21/33/rain-99130_1280.png);"></div>';
+          break;
+        case 'snow':
+          animationHTML = '<div style="position:absolute;width:100%;height:100%;background:url(https://cdn.pixabay.com/photo/2017/01/31/16/24/snow-2028999_1280.png);"></div>';
+          break;
+        case 'thunderstorm':
+          animationHTML = '<div style="position:absolute;width:100%;height:100%;background:black;animation:flash 1s infinite alternate;"></div>';
+          break;
+        default:
+          animationHTML = '';
+      }
+      weatherAnimation.innerHTML = animationHTML;
+    }
+  </script>
+</body>
+</html>
